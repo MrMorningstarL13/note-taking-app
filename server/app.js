@@ -1,11 +1,13 @@
 const express = require('express');
 require('dotenv').config();
 const db = require('./db');
+const userRouter = require('./routes/user')
 
 const app = express();
 const port = process.env.PORT || 8888;
 
 app.use(express.json());
+app.use('/users', userRouter)
 
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${res.statusCode}`);
