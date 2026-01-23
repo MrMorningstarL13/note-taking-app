@@ -26,7 +26,26 @@ const findByEmail = async(email) => {
     return user;
 }
 
+const create = async(userData) => {
+    const docRef = await userCollection.add(userData);
+    return {
+        id: docRef.id,
+        ...userData
+    };
+}
+
+const update = async(userId, updateData) => {
+    await userCollection.doc(userId).update(updateData);
+    const updatedDoc = await userCollection.doc(userId).get();
+    return {
+        id: updatedDoc.id,
+        ...updatedDoc.data()
+    };
+}
+
 module.exports = {
     getAll,
-    findByEmail
+    findByEmail,
+    create,
+    update
 }
