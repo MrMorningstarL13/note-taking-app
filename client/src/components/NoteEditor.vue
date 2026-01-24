@@ -164,9 +164,9 @@ import {
   FileText, Star, Pin, Tag, Check, FolderOpen, Trash2,
   Folder, User, Briefcase
 } from 'lucide-vue-next'
-import { useNotesStore } from '../stores/notes'
+import { useUserStore } from '../stores/user'
 
-const store = useNotesStore()
+const store = useUserStore()
 
 const showTagMenu = ref(false)
 const showFolderMenu = ref(false)

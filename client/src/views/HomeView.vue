@@ -91,12 +91,12 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import { Plus } from 'lucide-vue-next'
-import { useNotesStore } from '../stores/notes'
+import { useUserStore } from '../stores/user'
 import FolderItem from '../components/FolderItem.vue'
 import NoteList from '../components/NoteList.vue'
 import NoteEditor from '../components/NoteEditor.vue'
 
-const store = useNotesStore()
+const store = useUserStore()
 
 const showNewFolderInput = ref(false)
 const newFolderName = ref('')

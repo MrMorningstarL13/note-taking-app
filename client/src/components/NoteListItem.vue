@@ -50,7 +50,7 @@
 <script setup>
 import { computed } from 'vue'
 import { Pin, Star } from 'lucide-vue-next'
-import { useNotesStore } from '../stores/notes'
+import { useUserStore } from '../stores/user'
 
 const props = defineProps({
   note: {
@@ -63,7 +63,7 @@ const props = defineProps({
   }
 })
 
-const store = useNotesStore()
+const store = useUserStore()
 
 defineEmits(['select'])
 

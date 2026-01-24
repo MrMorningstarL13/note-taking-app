@@ -56,10 +56,10 @@
 
 <script setup>
 import { Search, FileText, Plus } from 'lucide-vue-next'
-import { useNotesStore } from '../stores/notes'
+import { useUserStore } from '../stores/user'
 import NoteListItem from './NoteListItem.vue'
 
-const store = useNotesStore()
+const store = useUserStore()
 </script>
 
 <style scoped>

@@ -84,7 +84,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useAuthStore } from '../stores/auth'
+import { ref } from 'vue'
+import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
 
 const isLogin = ref(true)
@@ -92,7 +93,7 @@ const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 
-const authStore = useAuthStore()
+const userStore = useUserStore()
 const router = useRouter()
 
 function toggleMode() {
@@ -109,8 +110,8 @@ async function handleSubmit() {
   }
 
   const result = isLogin.value 
-    ? await authStore.login(email.value, password.value)
-    : await authStore.register(email.value, password.value)
+    ? await userStore.login(email.value, password.value)
+    : await userStore.register(email.value, password.value)
 
   if (result.success) {
     router.push('/')
