@@ -8,30 +8,18 @@
       </div>
       
       <nav class="flex-1 overflow-y-auto p-4 space-y-6">
-        <!-- Default Folders -->
+        <!-- Folders -->
         <div class="space-y-1">
-          <FolderItem
-            v-for="folder in store.defaultFolders"
-            :key="folder.id"
-            :folder="folder"
-            :is-selected="store.selectedFolderId === folder.id"
-            :count="store.getNotesCountForFolder(folder.id)"
-            @select="store.selectFolder"
-          />
-        </div>
-
-        <!-- Custom Folders -->
-        <div>
           <div class="flex items-center justify-between px-2 mb-3">
-            <span class="text-xs font-bold uppercase tracking-widest text-white/40">My Folders</span>
-            <button
-              @click="showNewFolderInput = true"
-              class="text-white/60 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-all duration-300 hover:rotate-90 hover:shadow-glow"
-            >
-              <Plus class="w-4 h-4" />
-            </button>
+             <span class="text-xs font-bold uppercase tracking-widest text-white/40">Folders</span>
+             <button
+               @click="showNewFolderInput = true"
+               class="text-white/60 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-all duration-300 hover:rotate-90 hover:shadow-glow"
+             >
+               <Plus class="w-4 h-4" />
+             </button>
           </div>
-          
+
           <div v-if="showNewFolderInput" class="mb-3 px-1">
             <input
               v-model="newFolderName"
@@ -43,18 +31,16 @@
             />
           </div>
 
-          <div class="space-y-1">
-            <FolderItem
-              v-for="folder in store.customFolders"
-              :key="folder.id"
-              :folder="folder"
-              :is-selected="store.selectedFolderId === folder.id"
-              :count="store.getNotesCountForFolder(folder.id)"
-              @select="store.selectFolder"
-              @delete="store.deleteFolder"
-              :allow-delete="true"
-            />
-          </div>
+          <FolderItem
+            v-for="folder in store.folders"
+            :key="folder.id"
+            :folder="folder"
+            :is-selected="store.selectedFolderId === folder.id"
+            :count="store.getNotesCountForFolder(folder.id)"
+            @select="store.selectFolder"
+            @delete="store.deleteFolder"
+            :allow-delete="true" 
+          />
         </div>
       </nav>
 

@@ -128,8 +128,65 @@ export const useUserStore = defineStore('user', () => {
         });
 
         notes.value = newNotes;
-        customFolders.value = newCustomFolders;
+        folders.value = newFolders;
+
+        // Auto-select first folder if nothing selected or current selection invalid
+        if (!selectedFolderId.value || !newFolders.find(f => f.id === selectedFolderId.value)) {
+            if (newFolders.length > 0) {
+                selectedFolderId.value = newFolders[0].id;
+            }
+        }
     }
+
+    // --- Persistence (Backend) ---
+    let saveTimeout = null;
+    const saveData = async () => {
+        if (!isAuthenticated.value || !user.value) return;
+
+        // Debounce
+        if (saveTimeout) clearTimeout(saveTimeout);
+
+        saveTimeout = setTimeout(async () => {
+            // Reconstruct backend structure
+            // We need to map notes back to their folders
+            const folderStructure = folders.value.map(folder => {
+                // Get notes that belong to this folder
+                const folderNotes = notes.value.filter(n => n.folderId === folder.id);
+
+                // Return folder object matching backend expectation
+                return {
+                    id: folder.id,
+                    name: folder.name,
+                    icon: folder.icon, // persistent icon if backend supports it
+                    type: folder.type,
+                    notes: folderNotes // These notes already have updated content
+                };
+            });
+
+            console.log('Auto-saving user data...');
+
+            try {
+                const response = await fetch('http://localhost:8080/users/updateData', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.value.email,
+                        folders: folderStructure
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to auto-save data');
+                } else {
+                    console.log('Data saved successfully');
+                }
+            } catch (error) {
+                console.error('Error auto-saving data:', error);
+            }
+        }, 1000);
+    };
+
+    watch([notes, folders], saveData, { deep: true });
 
     async function login(email, password) {
         try {
@@ -286,8 +343,8 @@ export const useUserStore = defineStore('user', () => {
             if (response.ok) {
                 const newFolder = data.folder;
                 newFolder.icon = 'FolderOpen';
-                newFolder.type = 'custom';
-                customFolders.value.push(newFolder)
+                newFolder.type = 'backend';
+                folders.value.push(newFolder)
             } else {
                 console.error('Failed to create folder:', data);
             }
@@ -297,11 +354,12 @@ export const useUserStore = defineStore('user', () => {
     }
 
     function deleteFolder(id) {
-        customFolders.value = customFolders.value.filter(f => f.id !== id)
-        notes.value.forEach(n => {
-            if (n.folderId === id) n.folderId = 'all'
-        })
-        if (selectedFolderId.value === id) selectedFolderId.value = 'all'
+        folders.value = folders.value.filter(f => f.id !== id)
+        // Note deletion logic? 
+        // If we delete a folder locally, what happens to notes? 
+        // Usually should call backend delete. Check backend support later.
+
+        if (selectedFolderId.value === id) selectedFolderId.value = folders.value[0]?.id || null
     }
 
     function selectFolder(id) {
@@ -365,9 +423,9 @@ export const useUserStore = defineStore('user', () => {
         isAuthenticated,
         // Notes State
         notes,
-        customFolders,
+        folders,
         tags,
-        defaultFolders,
+        // defaultFolders gone
         allFolders,
         currentFolder,
         filteredNotes,
@@ -400,6 +458,7 @@ export const useUserStore = defineStore('user', () => {
         toggleFavourite,
         togglePin,
         toggleNoteTag,
-        moveToFolder
+        moveToFolder,
+        saveData
     }
 })

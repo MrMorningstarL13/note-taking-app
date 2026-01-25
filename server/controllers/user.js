@@ -1,6 +1,33 @@
-const { getAll, findByEmail, create, update } = require('../models/user');
+const { getAll, findByEmail, findById, create, update } = require('../models/user');
 const { comparePassword, generateToken, hashPassword } = require("../utils/auth")
 
+const updateUserData = async (req, res) => {
+    try {
+        const { userId, folders } = req.body;
+
+        if (!userId)
+            return res.status(400).json("User ID is required");
+
+        const user = await findById(userId);
+
+        if (!user)
+            return res.status(404).json("User not found");
+
+        const updatedUser = await update(userId, {
+            folders: folders || user.folders,
+            lastSync: new Date()
+        });
+
+        res.status(200).json({
+            message: "User data updated successfully",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error("Update user data error", error.message);
+        return res.status(500).json("Internal server error");
+    }
+}
 const getUsers = async (req, res) => {
     try {
         const users = await getAll();
@@ -119,7 +146,7 @@ const createNote = async (req, res) => {
         if (!userId || !folderName)
             return res.status(400).json("You must provide userId, folderName, and title")
 
-        const user = await findByEmail(userId);
+        const user = await findById(userId);
 
         if (!user)
             return res.status(404).json("User not found")
@@ -162,7 +189,7 @@ const createFolder = async (req, res) => {
         if (!userId || !folderName)
             return res.status(400).json("You must provide userId and folderName")
 
-        const user = await findByEmail(userId);
+        const user = await findById(userId);
 
         if (!user)
             return res.status(404).json("User not found")
@@ -201,5 +228,6 @@ module.exports = {
     login,
     register,
     createNote,
-    createFolder
+    createFolder,
+    updateUserData
 }

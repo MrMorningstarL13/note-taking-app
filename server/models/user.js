@@ -4,17 +4,29 @@ const userCollection = db.collection('users');
 const getAll = async () => {
     const usersSnapshot = await userCollection.get();
 
-    if(usersSnapshot.empty) {
+    if (usersSnapshot.empty) {
         return null;
     }
 
     return usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-const findByEmail = async(email) => {
+const findById = async (id) => {
+    const userDoc = await userCollection.doc(id).get();
+
+    if (!userDoc.exists)
+        return null;
+
+    return {
+        id: userDoc.id,
+        ...userDoc.data()
+    };
+}
+
+const findByEmail = async (email) => {
     const usersSnapshot = await userCollection.where('email', '==', email).get();
 
-    if(usersSnapshot.empty)
+    if (usersSnapshot.empty)
         return null;
 
     const userDoc = usersSnapshot.docs[0]
@@ -26,7 +38,7 @@ const findByEmail = async(email) => {
     return user;
 }
 
-const create = async(userData) => {
+const create = async (userData) => {
     const docRef = await userCollection.add(userData);
     return {
         id: docRef.id,
@@ -34,7 +46,7 @@ const create = async(userData) => {
     };
 }
 
-const update = async(userId, updateData) => {
+const update = async (userId, updateData) => {
     await userCollection.doc(userId).update(updateData);
     const updatedDoc = await userCollection.doc(userId).get();
     return {
@@ -45,6 +57,7 @@ const update = async(userId, updateData) => {
 
 module.exports = {
     getAll,
+    findById,
     findByEmail,
     create,
     update
