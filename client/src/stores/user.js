@@ -373,6 +373,39 @@ export const useUserStore = defineStore('user', () => {
         }
     }
 
+    async function generateAINote(prompt) {
+        if (!isAuthenticated.value) return;
+
+        try {
+            const token = Cookies.get('token')
+            const response = await fetch('http://localhost:8080/ai/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ prompt })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data || 'AI Generation failed');
+            }
+
+            if (selectedNote.value) {
+                updateNote(selectedNoteId.value, {
+                    content: (selectedNote.value.content || '') + (selectedNote.value.content ? '\n\n' : '') + data.text
+                });
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('AI error:', error);
+            return { success: false, message: error.message };
+        }
+    }
+
     return {
         // Auth State
         userRef,
@@ -409,6 +442,7 @@ export const useUserStore = defineStore('user', () => {
         setSearchQuery,
         toggleFavourite,
         moveToFolder,
+        generateAINote,
         saveData
     }
 })

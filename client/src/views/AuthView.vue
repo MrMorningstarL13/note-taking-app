@@ -58,7 +58,7 @@
           </div>
 
           <!-- Confirm Password (Signup only) -->
-          <div v-if="!isLogin" class="space-y-2 animate-in slide-in-from-top-4 fade-in duration-300">
+          <div v-if="!isLogin" class="space-y-2 duration-300">
             <label class="text-xs font-bold uppercase tracking-widest text-white/50 ml-1">Confirm Password</label>
             <input 
               v-model="confirmPassword"

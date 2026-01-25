@@ -21,7 +21,7 @@
              <span class="text-xs font-bold uppercase tracking-widest text-white/40">Folders</span>
              <button
                @click="showNewFolderInput = true"
-               class="text-white/60 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-all duration-300 hover:rotate-90 hover:shadow-glow"
+               class="text-white/60 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-all duration-300 hover:rotate-90"
              >
                <Plus class="w-4 h-4" />
              </button>

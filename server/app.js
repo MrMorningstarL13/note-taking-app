@@ -2,6 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const db = require('./db');
 const userRouter = require('./routes/user')
+const aiRouter = require('./routes/ai')
 const cors = require('cors');
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(cors({
 }));
 
 app.use('/users', userRouter)
+app.use('/ai', aiRouter)
 
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${res.statusCode}`);
