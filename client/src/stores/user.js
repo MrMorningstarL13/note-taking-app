@@ -3,65 +3,70 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
+import { v4 as uuidv4 } from 'uuid'
 
 export const useUserStore = defineStore('user', () => {
     const router = useRouter()
 
-    const user = ref(null)
+    const userRef = ref(null)
     const isAuthenticated = ref(false)
 
-    const notes = ref([])
-    const customFolders = ref([])
-    const tags = ref([
-        { id: 'tag-1', name: 'Work', color: '#ec4899' }, // Pink
-        { id: 'tag-2', name: 'Personal', color: '#3b82f6' }, // Blue
-        { id: 'tag-3', name: 'Ideas', color: '#f59e0b' }, // Amber
-        { id: 'tag-4', name: 'Urgent', color: '#ef4444' }, // Red
-    ])
-
-    const selectedFolderId = ref('all')
+    const folders = ref([])
+    const notes = computed(() => folders.value.flatMap(f => f.notes || []))
+    const selectedFolderId = ref(null)
     const selectedNoteId = ref(null)
-    const selectedTagId = ref(null)
     const searchQuery = ref('')
 
-
-    // --- Auth Initialization ---
     const token = Cookies.get('token')
     if (token) {
         try {
             const decoded = jwtDecode(token)
-            user.value = decoded
+            userRef.value = decoded
             isAuthenticated.value = true
+
+            folders.value = JSON.parse(localStorage.getItem('folders')) || []
+            selectedFolderId.value = localStorage.getItem('selectedFolderId') || null
         } catch (e) {
             Cookies.remove('token')
+            clearLocalStorage()
         }
+    } else {
+        clearLocalStorage()
     }
 
-    const defaultFolders = computed(() => [
-        { id: 'all', name: 'All Notes', icon: 'Folder', type: 'default' },
-        { id: 'favourites', name: 'Favourites', icon: 'Star', type: 'default' },
-        { id: 'trash', name: 'Trash', icon: 'Trash2', type: 'default' },
-    ])
+    function syncLocalStorage() {
+        localStorage.setItem('folders', JSON.stringify(folders.value))
+        localStorage.setItem('selectedFolderId', selectedFolderId.value)
+    }
 
-    const allFolders = computed(() => [...defaultFolders.value, ...customFolders.value])
-    const currentFolder = computed(() => allFolders.value.find(f => f.id === selectedFolderId.value) || defaultFolders.value[0])
+    function clearLocalStorage() {
+        localStorage.removeItem('notes')
+        localStorage.removeItem('folders')
+        localStorage.removeItem('selectedFolderId')
+    }
+
+    const allPhysicalFolders = computed(() => folders.value)
+    const allFolders = computed(() => [
+        { id: 'favourites', name: 'Favourites', icon: 'Star', type: 'virtual' },
+        ...folders.value
+    ])
+    const currentFolder = computed(() => allFolders.value.find(f => f.id === selectedFolderId.value) || allFolders.value[0])
 
     const filteredNotes = computed(() => {
-        let result = notes.value
+        let activeFolderId = selectedFolderId.value
 
-        if (selectedFolderId.value === 'all') {
-            result = result.filter(n => !n.isTrashed)
-        } else if (selectedFolderId.value === 'favourites') {
-            result = result.filter(n => n.isFavourite && !n.isTrashed)
-        } else if (selectedFolderId.value === 'trash') {
-            result = result.filter(n => n.isTrashed)
+        if (!activeFolderId || !allFolders.value.find(f => f.id === activeFolderId)) {
+            activeFolderId = allFolders.value[0]?.id || null
+        }
+
+        let result = []
+        if (activeFolderId === 'favourites') {
+            result = notes.value.filter(n => n.isFavourite)
         } else {
-            result = result.filter(n => n.folderId === selectedFolderId.value && !n.isTrashed)
+            const folder = folders.value.find(f => f.id === activeFolderId)
+            result = folder ? [...folder.notes] : []
         }
 
-        if (selectedTagId.value) {
-            result = result.filter(n => n.tags.includes(selectedTagId.value))
-        }
         if (searchQuery.value) {
             const q = searchQuery.value.toLowerCase()
             result = result.filter(n =>
@@ -76,101 +81,59 @@ export const useUserStore = defineStore('user', () => {
     const selectedNote = computed(() => notes.value.find(n => n.id === selectedNoteId.value))
 
     const getNotesCountForFolder = (folderId) => {
-        if (folderId === 'all') return notes.value.filter(n => !n.isTrashed).length
-        if (folderId === 'favourites') return notes.value.filter(n => n.isFavourite && !n.isTrashed).length
-        if (folderId === 'trash') return notes.value.filter(n => n.isTrashed).length
-        return notes.value.filter(n => n.folderId === folderId && !n.isTrashed).length
+        if (folderId === 'favourites') return notes.value.filter(n => n.isFavourite).length
+        const folder = folders.value.find(f => f.id === folderId)
+        return folder ? folder.notes.length : 0
     }
 
-    const getTagById = (id) => tags.value.find(t => t.id === id)
 
     function setUserData(userData) {
         if (!userData || !userData.folders) return;
 
         console.log('Setting user data:', userData);
 
-        const newNotes = [];
-        const newCustomFolders = [];
+        folders.value = userData.folders.map(folder => ({
+            id: folder.id || folder.name,
+            name: folder.name,
+            icon: folder.icon || 'FolderOpen',
+            type: 'custom',
+            createdAt: folder.createdAt || new Date().toISOString(),
+            notes: (folder.notes || []).map(note => ({
+                ...note,
+                isFavourite: note.isFavourite || false
+            }))
+        }));
 
-        userData.folders.forEach(folder => {
-            let folderId = folder.name;
-            if (folder.name === 'unfoldered') folderId = 'all';
-            else if (folder.name === 'favorites') folderId = 'favourites';
-            else {
-                if (folder.id) {
-                    folderId = folder.id;
-                    newCustomFolders.push({
-                        id: folder.id,
-                        name: folder.name,
-                        icon: 'FolderOpen',
-                        type: 'custom'
-                    });
-                } else {
-                    folderId = folder.name;
-                    newCustomFolders.push({
-                        id: folder.name,
-                        name: folder.name,
-                        icon: 'FolderOpen',
-                        type: 'custom'
-                    });
-                }
-            }
-
-            if (folder.notes && Array.isArray(folder.notes)) {
-                folder.notes.forEach(note => {
-                    newNotes.push({
-                        ...note,
-                        folderId: folderId,
-                        isFavourite: note.isFavourite || false,
-                    });
-                });
-            }
-        });
-
-        notes.value = newNotes;
-        folders.value = newFolders;
-
-        // Auto-select first folder if nothing selected or current selection invalid
-        if (!selectedFolderId.value || !newFolders.find(f => f.id === selectedFolderId.value)) {
-            if (newFolders.length > 0) {
-                selectedFolderId.value = newFolders[0].id;
-            }
+        if (!selectedFolderId.value || !allFolders.value.find(f => f.id === selectedFolderId.value)) {
+            selectedFolderId.value = allPhysicalFolders.value[0]?.id || 'favourites';
         }
+
+        syncLocalStorage();
     }
 
-    // --- Persistence (Backend) ---
     let saveTimeout = null;
     const saveData = async () => {
-        if (!isAuthenticated.value || !user.value) return;
+        if (!isAuthenticated.value || !userRef.value) return;
 
-        // Debounce
+        syncLocalStorage();
+
         if (saveTimeout) clearTimeout(saveTimeout);
 
         saveTimeout = setTimeout(async () => {
-            // Reconstruct backend structure
-            // We need to map notes back to their folders
-            const folderStructure = folders.value.map(folder => {
-                // Get notes that belong to this folder
-                const folderNotes = notes.value.filter(n => n.folderId === folder.id);
-
-                // Return folder object matching backend expectation
-                return {
-                    id: folder.id,
-                    name: folder.name,
-                    icon: folder.icon, // persistent icon if backend supports it
-                    type: folder.type,
-                    notes: folderNotes // These notes already have updated content
-                };
-            });
-
-            console.log('Auto-saving user data...');
+            const folderStructure = allPhysicalFolders.value.map(folder => ({
+                id: folder.id,
+                name: folder.name,
+                icon: folder.icon,
+                createdAt: folder.createdAt,
+                notes: folder.notes || []
+            }));
 
             try {
                 const response = await fetch('http://localhost:8080/users/updateData', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        userId: user.value.email,
+                        userId: userRef.value.id,
                         folders: folderStructure
                     })
                 });
@@ -203,15 +166,15 @@ export const useUserStore = defineStore('user', () => {
                 throw new Error(data || 'Login failed')
             }
 
-            const { token, user: userData } = data
+            const { token, user } = data
             Cookies.set('token', token, { expires: 7 })
 
-            const decoded = jwtDecode(token)
-            user.value = decoded
+            userRef.value = user
+
             isAuthenticated.value = true
 
-            if (userData) {
-                setUserData(userData)
+            if (user) {
+                setUserData(user)
             }
 
             return { success: true }
@@ -236,15 +199,15 @@ export const useUserStore = defineStore('user', () => {
                 throw new Error(data || 'Registration failed')
             }
 
-            const { token, newUser } = data
+            const { token, user } = data
             Cookies.set('token', token, { expires: 7 })
 
-            const decoded = jwtDecode(token)
-            user.value = decoded
+            // const decoded = jwtDecode(token)
+            userRef.value = user
             isAuthenticated.value = true
 
-            if (newUser) {
-                setUserData(newUser)
+            if (user) {
+                setUserData(user)
             }
 
             return { success: true }
@@ -255,117 +218,112 @@ export const useUserStore = defineStore('user', () => {
     }
 
     function logout() {
-        user.value = null
+        userRef.value = null
         isAuthenticated.value = false
         Cookies.remove('token')
 
-        // Clear notes state on logout
-        notes.value = []
-        customFolders.value = []
-        selectedFolderId.value = 'all'
+        folders.value = []
+        selectedFolderId.value = null
         selectedNoteId.value = null
 
-        router.push('/login')
+        clearLocalStorage()
+
+        router.push('/auth')
     }
 
-    async function createNote() {
+    function createNote() {
         if (!isAuthenticated.value) return;
 
-        let serverFolderName = 'unfoldered';
-        if (selectedFolderId.value === 'favourites') {
-            serverFolderName = 'favorites';
-        } else if (selectedFolderId.value === 'trash') {
-            serverFolderName = 'unfoldered';
-        } else if (selectedFolderId.value !== 'all') {
-            const folder = customFolders.value.find(f => f.id === selectedFolderId.value);
-            if (folder) serverFolderName = folder.name;
+        let targetFolderId = selectedFolderId.value;
+
+        if (!targetFolderId || targetFolderId === 'favourites' || !allPhysicalFolders.value.find(f => f.id === targetFolderId)) {
+            targetFolderId = allPhysicalFolders.value[0]?.id || null;
         }
 
-        try {
-            const response = await fetch('http://localhost:8080/users/createNote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.value.email, folderName: serverFolderName })
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                const newNote = data.note;
-                notes.value.unshift(newNote)
-                selectedNoteId.value = newNote.id
-            } else {
-                console.error('Failed to create note:', data);
-            }
-        } catch (error) {
-            console.error('Error creating note:', error);
+        const folder = folders.value.find(f => f.id === targetFolderId)
+        if (!folder) {
+            console.warn('Cannot create note: no folders available');
+            return;
         }
+
+        const newNote = {
+            id: uuidv4(),
+            title: 'New Note',
+            content: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            isFavourite: false
+        };
+
+        folder.notes.unshift(newNote);
+        selectedNoteId.value = newNote.id;
+        syncLocalStorage();
     }
 
     function updateNote(id, updates) {
         const note = notes.value.find(n => n.id === id)
         if (note) {
             Object.assign(note, updates, { updatedAt: new Date().toISOString() })
+            syncLocalStorage();
         }
     }
 
     function deleteNote(id) {
-        const note = notes.value.find(n => n.id === id)
-        if (note) {
-            if (note.isTrashed) {
-                notes.value = notes.value.filter(n => n.id !== id)
-            } else {
-                note.isTrashed = true
-                note.updatedAt = new Date().toISOString()
-            }
-            if (selectedNoteId.value === id) selectedNoteId.value = null
-        }
+        folders.value.forEach(folder => {
+            folder.notes = folder.notes.filter(n => n.id !== id)
+        })
+        if (selectedNoteId.value === id) selectedNoteId.value = null
+        syncLocalStorage();
     }
 
-    function restoreNote(id) {
-        const note = notes.value.find(n => n.id === id)
-        if (note) {
-            note.isTrashed = false
-            note.updatedAt = new Date().toISOString()
-        }
-    }
 
-    async function createFolder(name) {
+    function createFolder(name) {
         if (!isAuthenticated.value) return;
+        if (!name || !name.trim()) return;
 
-        try {
-            const response = await fetch('http://localhost:8080/users/createFolder', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.value.email, folderName: name })
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                const newFolder = data.folder;
-                newFolder.icon = 'FolderOpen';
-                newFolder.type = 'backend';
-                folders.value.push(newFolder)
-            } else {
-                console.error('Failed to create folder:', data);
-            }
-        } catch (error) {
-            console.error('Error creating folder:', error);
+        const nameExists = folders.value.some(f => f.name.toLowerCase() === name.toLowerCase());
+        if (nameExists) {
+            console.warn('A folder with this name already exists');
+            return;
         }
+
+        const newFolder = {
+            id: uuidv4(),
+            name: name.trim(),
+            icon: 'FolderOpen',
+            type: 'custom',
+            createdAt: new Date().toISOString(),
+            notes: []
+        };
+
+        folders.value.push(newFolder);
+        syncLocalStorage();
     }
 
     function deleteFolder(id) {
-        folders.value = folders.value.filter(f => f.id !== id)
-        // Note deletion logic? 
-        // If we delete a folder locally, what happens to notes? 
-        // Usually should call backend delete. Check backend support later.
+        if (id === 'favourites') return
 
-        if (selectedFolderId.value === id) selectedFolderId.value = folders.value[0]?.id || null
+        folders.value = folders.value.filter(f => f.id !== id)
+        if (selectedFolderId.value === id) {
+            selectedFolderId.value = allPhysicalFolders.value[0]?.id || null
+        }
+        syncLocalStorage();
+    }
+
+    function updateFolder(id, name) {
+        if (id === 'favourites') return
+
+        const folder = folders.value.find(f => f.id === id)
+        if (folder && name && name.trim()) {
+            folder.name = name.trim()
+            syncLocalStorage();
+        }
     }
 
     function selectFolder(id) {
         selectedFolderId.value = id
+        syncLocalStorage();
         selectedNoteId.value = null
-        selectedTagId.value = null
         searchQuery.value = ''
     }
 
@@ -373,9 +331,6 @@ export const useUserStore = defineStore('user', () => {
         selectedNoteId.value = id
     }
 
-    function toggleTagFilter(id) {
-        selectedTagId.value = selectedTagId.value === id ? null : id
-    }
 
     function setSearchQuery(query) {
         searchQuery.value = query
@@ -386,52 +341,47 @@ export const useUserStore = defineStore('user', () => {
         if (note) {
             note.isFavourite = !note.isFavourite
             note.updatedAt = new Date().toISOString()
+            syncLocalStorage();
         }
     }
 
-    function togglePin(id) {
-        const note = notes.value.find(n => n.id === id)
-        if (note) {
-            note.isPinned = !note.isPinned
-            note.updatedAt = new Date().toISOString()
-        }
-    }
 
-    function toggleNoteTag(noteId, tagId) {
-        const note = notes.value.find(n => n.id === noteId)
-        if (note) {
-            if (note.tags.includes(tagId)) {
-                note.tags = note.tags.filter(t => t !== tagId)
-            } else {
-                note.tags.push(tagId)
+    function moveToFolder(noteId, newFolderId) {
+        let noteToMove = null;
+
+        // Find and remove the note from its current folder
+        for (const folder of folders.value) {
+            const index = folder.notes.findIndex(n => n.id === noteId);
+            if (index !== -1) {
+                noteToMove = folder.notes.splice(index, 1)[0];
+                break;
             }
-            note.updatedAt = new Date().toISOString()
         }
-    }
 
-    function moveToFolder(noteId, folderId) {
-        const note = notes.value.find(n => n.id === noteId)
-        if (note) {
-            note.folderId = folderId
-            note.updatedAt = new Date().toISOString()
+        if (noteToMove) {
+            const destFolder = folders.value.find(f => f.id === newFolderId);
+            if (destFolder) {
+                destFolder.notes.push(noteToMove);
+                noteToMove.updatedAt = new Date().toISOString();
+                syncLocalStorage();
+                saveData();
+            }
         }
     }
 
     return {
         // Auth State
-        user,
+        userRef,
         isAuthenticated,
         // Notes State
         notes,
         folders,
-        tags,
-        // defaultFolders gone
         allFolders,
+        allPhysicalFolders,
         currentFolder,
         filteredNotes,
         selectedFolderId,
         selectedNoteId,
-        selectedTagId,
         selectedNote,
         searchQuery,
 
@@ -442,22 +392,18 @@ export const useUserStore = defineStore('user', () => {
 
         // Notes Getters/Helpers
         getNotesCountForFolder,
-        getTagById,
 
         // Notes Actions
         createNote,
         updateNote,
         deleteNote,
-        restoreNote,
         createFolder,
         deleteFolder,
+        updateFolder,
         selectFolder,
         selectNote,
-        toggleTagFilter,
         setSearchQuery,
         toggleFavourite,
-        togglePin,
-        toggleNoteTag,
         moveToFolder,
         saveData
     }

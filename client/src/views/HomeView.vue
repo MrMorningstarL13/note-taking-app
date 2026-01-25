@@ -1,6 +1,13 @@
 <template>
   <div class="h-screen flex overflow-hidden font-sans text-white selection:bg-pink-500/30">
-    <aside class="w-72 bg-white/5 backdrop-blur-2xl border-r border-white/10 flex flex-col transition-all duration-300 shadow-2xl z-10 relative">
+    <!-- Sidebar -->
+    <aside 
+      :class="[
+        'w-full md:w-72 bg-white/5 backdrop-blur-2xl border-r border-white/10 flex-col transition-all duration-300 shadow-2xl z-10 relative',
+        mobileView === 'sidebar' ? 'flex' : 'hidden',
+        'md:flex'
+      ]"
+    >
       <div class="p-6 border-b border-white/5 bg-white/5">
         <h1 class="text-4xl font-black tracking-tight bg-gradient-to-r from-sky-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg">
           Notes
@@ -32,57 +39,71 @@
           </div>
 
           <FolderItem
-            v-for="folder in store.folders"
+            v-for="folder in store.allFolders"
             :key="folder.id"
             :folder="folder"
             :is-selected="store.selectedFolderId === folder.id"
             :count="store.getNotesCountForFolder(folder.id)"
-            @select="store.selectFolder"
+            @select="handleFolderSelect"
             @delete="store.deleteFolder"
-            :allow-delete="true" 
+            @rename="({ id, name }) => store.updateFolder(id, name)"
+            :allow-delete="folder.type !== 'virtual'" 
           />
         </div>
       </nav>
 
-      <!-- Tags Section -->
-      <div class="p-5 border-t border-white/10 bg-gradient-to-t from-black/20 to-transparent">
-        <span class="text-xs font-bold text-white/40 uppercase tracking-widest">Tags</span>
-        <div class="flex flex-wrap gap-2 mt-4">
+      <div class="p-4 border-t border-white/5 bg-white/5 backdrop-blur-md">
+        <div class="flex items-center justify-between gap-3 px-2 py-3 rounded-2xl bg-white/5 border border-white/10 shadow-lg group/user transition-all duration-300 hover:bg-white/10">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400/20 to-purple-500/20 border border-white/10 flex items-center justify-center flex-shrink-0 group-hover/user:scale-105 transition-transform duration-300">
+              <User class="w-5 h-5 text-cyan-300" />
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-bold text-white truncate">{{ store.userRef?.displayName || store.userRef?.email || 'User' }}</span>
+            </div>
+          </div>
+          
           <button
-            v-for="tag in store.tags"
-            :key="tag.id"
-            @click="store.toggleTagFilter(tag.id)"
-            :class="[
-              'px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-300 border',
-              store.selectedTagId === tag.id
-                ? 'text-white border-transparent shadow-[0_0_15px_rgba(0,0,0,0.3)] scale-105'
-                : 'bg-white/5 border-white/5 text-white/50 hover:bg-white/10 hover:text-white hover:border-white/20 hover:scale-105'
-            ]"
-            :style="store.selectedTagId === tag.id ? { backgroundColor: tag.color, boxShadow: `0 0 15px ${tag.color}60` } : {}"
+            @click="store.logout"
+            class="p-2.5 rounded-xl text-white/40 hover:bg-red-500/20 hover:text-red-400 transition-all duration-300 hover:scale-110 active:scale-90 flex-shrink-0"
+            title="Logout"
           >
-            {{ tag.name }}
+            <LogOut class="w-5 h-5" />
           </button>
         </div>
       </div>
     </aside>
 
-    <!-- Notes List -->
-    <NoteList />
+    <NoteList 
+      :class="[
+        mobileView === 'list' ? 'flex' : 'hidden',
+        'md:flex'
+      ]"
+      @open-menu="mobileView = 'sidebar'"
+      @select-note="handleNoteSelect"
+    />
 
-    <!-- Note Editor -->
-    <NoteEditor />
+    <NoteEditor 
+      :class="[
+        mobileView === 'editor' ? 'flex' : 'hidden',
+        'md:flex'
+      ]"
+      @back="mobileView = 'list'"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, watch, nextTick } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Plus, LogOut, User } from 'lucide-vue-next'
 import { useUserStore } from '../stores/user'
 import FolderItem from '../components/FolderItem.vue'
 import NoteList from '../components/NoteList.vue'
 import NoteEditor from '../components/NoteEditor.vue'
 
 const store = useUserStore()
+
+const mobileView = ref('sidebar')
 
 const showNewFolderInput = ref(false)
 const newFolderName = ref('')
@@ -94,6 +115,16 @@ function handleCreateFolder() {
     newFolderName.value = ''
     showNewFolderInput.value = false
   }
+}
+
+function handleFolderSelect(folderId) {
+  store.selectFolder(folderId)
+  mobileView.value = 'list'
+}
+
+function handleNoteSelect(noteId) {
+  store.selectNote(noteId)
+  mobileView.value = 'editor'
 }
 
 watch(showNewFolderInput, (val) => {

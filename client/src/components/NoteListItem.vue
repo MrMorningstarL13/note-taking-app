@@ -14,7 +14,6 @@
     <div class="flex items-start gap-3 relative z-10 w-full">
       <div class="flex-1 min-w-0 space-y-1">
         <div class="flex items-center gap-2">
-          <Pin v-if="note.isPinned" class="w-3.5 h-3.5 text-pink-400 flex-shrink-0 fill-pink-400/20" />
           <h3 class="font-bold text-white truncate text-base group-hover:text-pink-200 transition-colors">
             {{ note.title || 'Untitled Note' }}
           </h3>
@@ -28,14 +27,6 @@
           <span class="text-xs font-medium text-white/30 group-hover:text-white/50 transition-colors">
             {{ formattedDate }}
           </span>
-          <div v-if="note.tags.length > 0" class="flex gap-1.5 flex-wrap">
-            <span
-              v-for="tagId in note.tags"
-              :key="tagId"
-              class="w-2 h-2 rounded-full shadow-sm"
-              :style="{ backgroundColor: getTagColor(tagId), boxShadow: `0 0 8px ${getTagColor(tagId)}` }"
-            />
-          </div>
         </div>
       </div>
 
@@ -49,7 +40,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { Pin, Star } from 'lucide-vue-next'
+import { Star } from 'lucide-vue-next'
 import { useUserStore } from '../stores/user'
 
 const props = defineProps({
@@ -66,11 +57,6 @@ const props = defineProps({
 const store = useUserStore()
 
 defineEmits(['select'])
-
-const getTagColor = (tagId) => {
-  const tag = store.getTagById(tagId)
-  return tag ? tag.color : '#cbd5e1'
-}
 
 const formattedDate = computed(() => {
   const d = new Date(props.note.updatedAt)

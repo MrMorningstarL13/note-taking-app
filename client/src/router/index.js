@@ -18,11 +18,6 @@ const router = createRouter({
       component: AuthView,
       meta: { requiresGuest: true }
     },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue'),
-    },
   ],
 })
 

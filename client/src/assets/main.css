@@ -1,10 +1,6 @@
 @import "tailwindcss";
 
-:root {
-  font-family: 'Outfit', sans-serif;
-}
-
-body {
+/* * {
   margin: 0;
   padding: 0;
-}
+} */

@@ -21,7 +21,7 @@
         <form @submit.prevent="handleSubmit" class="space-y-6">
           
           <!-- Email Input -->
-          <div class="space-y-2">
+          <div>
             <label class="text-xs font-bold uppercase tracking-widest text-white/50 ml-1">Email</label>
             <input 
               v-model="email"
@@ -83,7 +83,6 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { ref } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'

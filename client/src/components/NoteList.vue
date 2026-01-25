@@ -1,9 +1,17 @@
 <template>
-  <div class="w-80 border-r border-white/10 bg-white/5 backdrop-blur-3xl flex flex-col transition-all duration-300 shadow-2xl z-0">
+  <div class="w-full md:w-80 border-r border-white/10 bg-white/5 backdrop-blur-3xl flex flex-col transition-all duration-300 shadow-2xl z-0">
     <!-- Header -->
     <div class="p-6 border-b border-white/5 bg-white/5 backdrop-blur-md">
       <div class="flex items-center gap-3 mb-4">
-        <h2 class="font-black text-2xl text-white tracking-tight drop-shadow-md truncate">{{ store.currentFolder.name }}</h2>
+        <!-- Mobile Menu Button -->
+        <button 
+          @click="$emit('open-menu')"
+          class="md:hidden p-2 -ml-2 text-white/60 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+        >
+          <Menu class="w-5 h-5" />
+        </button>
+
+        <h2 class="font-black text-2xl text-white tracking-tight drop-shadow-md truncate">{{ store.currentFolder?.name }}</h2>
         <span class="px-2 py-0.5 rounded-full bg-white/10 text-xs font-bold text-white/60 border border-white/5 flex-shrink-0">
           {{ store.filteredNotes.length }}
         </span>
@@ -36,7 +44,7 @@
           :key="note.id"
           :note="note"
           :is-selected="store.selectedNoteId === note.id"
-          @select="store.selectNote"
+          @select="$emit('select-note', note.id)"
         />
       </div>
     </div>
@@ -55,11 +63,13 @@
 </template>
 
 <script setup>
-import { Search, FileText, Plus } from 'lucide-vue-next'
+import { Search, FileText, Plus, Menu } from 'lucide-vue-next'
 import { useUserStore } from '../stores/user'
 import NoteListItem from './NoteListItem.vue'
 
 const store = useUserStore()
+
+defineEmits(['open-menu', 'select-note'])
 </script>
 
 <style scoped>

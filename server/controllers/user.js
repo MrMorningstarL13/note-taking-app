@@ -8,13 +8,16 @@ const updateUserData = async (req, res) => {
         if (!userId)
             return res.status(400).json("User ID is required");
 
+        if (!folders || !Array.isArray(folders))
+            return res.status(400).json("Folders array is required");
+
         const user = await findById(userId);
 
         if (!user)
             return res.status(404).json("User not found");
 
         const updatedUser = await update(userId, {
-            folders: folders || user.folders,
+            folders,
             lastSync: new Date()
         });
 
@@ -60,6 +63,22 @@ const getByEmail = async (req, res) => {
     }
 }
 
+const getById = async (req, res) => {
+    try {
+        const { id } = req.params
+        const searchedUser = await findById(id)
+
+        if (!searchedUser)
+            return res.status(404).json("No user found for specified ID!")
+
+        return res.status(200).json(searchedUser)
+
+    } catch (error) {
+        console.error('Error fetching user by ID:', error.message);
+        res.status(500).json('Internal Server Error');
+    }
+}
+
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -68,6 +87,7 @@ const login = async (req, res) => {
             return res.status(400).json("You must provide a valid email and password")
 
         const user = await findByEmail(email)
+        console.log(user)
 
         if (!user)
             return res.status(404).json("No user found for specified email address")
@@ -113,12 +133,7 @@ const register = async (req, res) => {
             lastSync: new Date(),
             folders: [
                 {
-                    name: "unfoldered",
-                    createdAt: new Date(),
-                    notes: []
-                },
-                {
-                    name: "favorites",
+                    name: "All notes",
                     createdAt: new Date(),
                     notes: []
                 }
@@ -139,95 +154,11 @@ const register = async (req, res) => {
     }
 }
 
-const createNote = async (req, res) => {
-    try {
-        const { userId, folderName } = req.body;
-
-        if (!userId || !folderName)
-            return res.status(400).json("You must provide userId, folderName, and title")
-
-        const user = await findById(userId);
-
-        if (!user)
-            return res.status(404).json("User not found")
-
-        const folderIndex = user.folders.findIndex(f => f.name === folderName);
-
-        if (folderIndex === -1)
-            return res.status(404).json("Folder not found")
-
-        const newNote = {
-            title: "New Note",
-            content: "",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            isPinned: false,
-            tags: []
-        };
-
-        user.folders[folderIndex].notes.push(newNote);
-        user.lastSync = new Date();
-
-        const updatedUser = await update(user.id, { folders: user.folders, lastSync: user.lastSync });
-
-        res.status(201).json({
-            message: "Note created successfully",
-            note: newNote,
-            user: updatedUser
-        })
-
-    } catch (error) {
-        console.error("Create note error", error.message)
-        return res.status(500).json("Internal server error")
-    }
-}
-
-const createFolder = async (req, res) => {
-    try {
-        const { userId, folderName } = req.body;
-
-        if (!userId || !folderName)
-            return res.status(400).json("You must provide userId and folderName")
-
-        const user = await findById(userId);
-
-        if (!user)
-            return res.status(404).json("User not found")
-
-        const folderExists = user.folders.some(f => f.name === folderName);
-
-        if (folderExists)
-            return res.status(409).json("A folder with this name already exists")
-
-        const newFolder = {
-            name: folderName,
-            createdAt: new Date(),
-            notes: []
-        };
-
-        user.folders.push(newFolder);
-        user.lastSync = new Date();
-
-        const updatedUser = await update(user.id, { folders: user.folders, lastSync: user.lastSync });
-
-        res.status(201).json({
-            message: "Folder created successfully",
-            folder: newFolder,
-            user: updatedUser
-        })
-
-    } catch (error) {
-        console.error("Create folder error", error.message)
-        return res.status(500).json("Internal server error")
-    }
-}
-
 module.exports = {
     getUsers,
     getByEmail,
     login,
     register,
-    createNote,
-    createFolder,
-    updateUserData
+    updateUserData,
+    getById
 }
