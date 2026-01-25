@@ -10,7 +10,7 @@
     </div>
 
     <template v-else>
-      <div class="flex items-center justify-between p-4 border-b border-white/5 bg-white/5 backdrop-blur-md z-10">
+      <div class="flex items-center justify-between p-4 border-b border-white/5 bg-white/5 backdrop-blur-md z-30 relative">
         <div class="flex items-center gap-2">
           <button 
             @click="$emit('back')"
@@ -99,7 +99,7 @@
     <div
       v-if="showFolderMenu"
       @click="showFolderMenu = false"
-      class="fixed inset-0 z-10"
+      class="fixed inset-0 z-20"
     />
   </div>
 </template>

@@ -349,7 +349,6 @@ export const useUserStore = defineStore('user', () => {
     function moveToFolder(noteId, newFolderId) {
         let noteToMove = null;
 
-        // Find and remove the note from its current folder
         for (const folder of folders.value) {
             const index = folder.notes.findIndex(n => n.id === noteId);
             if (index !== -1) {
