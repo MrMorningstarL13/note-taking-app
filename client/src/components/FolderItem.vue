@@ -1,5 +1,5 @@
 <template>
-  <div class="group relative flex items-center">
+  <div class="group relative flex items-center overflow-hidden">
     <!-- Rename Input -->
     <div v-if="isEditing" class="w-full px-4 py-2">
       <input
@@ -15,7 +15,7 @@
       v-else
       @click="$emit('select', folder.id)"
       :class="[
-        'w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-left transition-all duration-300 relative overflow-hidden',
+        'w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-left transition-all duration-300 relative overflow-hidden cursor-pointer',
         isSelected
           ? 'bg-white/10 text-white shadow-lg backdrop-blur-md border border-white/10'
           : 'text-white/60 hover:bg-white/5 hover:text-white hover:pl-5'
@@ -34,39 +34,39 @@
       
       <span class="flex-1 font-medium tracking-wide truncate">{{ folder.name }}</span>
       
+      <!-- Actions (Always present on mobile, animated on desktop) -->
+      <div 
+        v-if="folder.id !== 'favourites' && (allowDelete && !isEditing)" 
+        class="flex items-center gap-1.5 flex-shrink-0 z-20 transition-all duration-300
+               md:absolute md:right-[-60px] md:opacity-0 md:group-hover:opacity-100 md:group-hover:right-11"
+      >
+        <button
+          @click.stop="startRename"
+          class="p-1.5 rounded-lg bg-white/10 text-white/40 hover:bg-white/20 hover:text-white transition-all"
+          title="Rename Folder"
+        >
+          <Pencil class="w-3.5 h-3.5" />
+        </button>
+
+        <button
+          @click.stop="$emit('delete', folder.id)"
+          class="p-1.5 rounded-lg bg-red-500/10 text-red-400/60 hover:bg-red-500 hover:text-white transition-all"
+          title="Delete Folder"
+        >
+          <Trash2 class="w-3.5 h-3.5" />
+        </button>
+      </div>
+
       <span
         v-if="count > 0"
         :class="[
-          'text-xs font-bold py-0.5 px-2 rounded-full transition-colors',
+          'text-xs font-bold py-0.5 px-2 rounded-full transition-colors flex-shrink-0',
           isSelected ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40 group-hover:text-white group-hover:bg-white/10'
         ]"
       >
         {{ count }}
       </span>
     </button>
-    
-    <!-- Actions -->
-    <div v-if="folder.id !== 'favourites'" class="absolute right-[-60px] opacity-0 group-hover:opacity-100 group-hover:right-2 flex items-center gap-1 transition-all duration-300">
-      <!-- Rename Button -->
-      <button
-        v-if="allowDelete && !isEditing"
-        @click.stop="startRename"
-        class="p-1.5 rounded-lg bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-all"
-        title="Rename Folder"
-      >
-        <Pencil class="w-3.5 h-3.5" />
-      </button>
-
-      <!-- Delete Button for Custom Folders -->
-      <button
-        v-if="allowDelete && !isEditing"
-        @click.stop="$emit('delete', folder.id)"
-        class="p-1.5 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white transition-all"
-        title="Delete Folder"
-      >
-        <Trash2 class="w-3.5 h-3.5" />
-      </button>
-    </div>
   </div>
 </template>
 

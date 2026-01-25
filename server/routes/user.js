@@ -1,12 +1,14 @@
 const express = require('express')
 const router = express.Router();
-const { getUsers, getByEmail, login, register, updateUserData, getById } = require("../controllers/user")
+const { getByEmail, login, register, updateUserData, getById } = require("../controllers/user")
+const { checkAuth } = require("../middlewares/authCheck")
+const { loginValidation, registerValidation, updateDataValidation } = require("../middlewares/validators")
 
-router.get('/getAll', getUsers)
-router.get('/getByEmail', getByEmail)
-router.get('/:id', getById)
-router.post('/login', login)
-router.post('/register', register)
-router.patch('/updateData', updateUserData)
+router.post('/login', loginValidation, login)
+router.post('/register', registerValidation, register)
+router.patch('/updateData', [checkAuth, ...updateDataValidation], updateUserData)
+
+router.get('/getByEmail', checkAuth, getByEmail)
+router.get('/:id', checkAuth, getById)
 
 module.exports = router

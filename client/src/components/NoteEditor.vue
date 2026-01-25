@@ -22,7 +22,7 @@
           <button
             @click="store.toggleFavourite(store.selectedNoteId)"
             :class="[
-              'p-2.5 rounded-xl transition-all duration-300 hover:scale-110',
+              'p-2.5 rounded-xl transition-all duration-300 hover:scale-110 cursor-pointer',
               store.selectedNote.isFavourite
                 ? 'text-yellow-400 bg-yellow-500/20 shadow-[0_0_15px_rgba(250,204,21,0.2)]'
                 : 'text-white/40 hover:bg-white/10 hover:text-white'
@@ -80,7 +80,7 @@
           :value="store.selectedNote.title"
           @input="handleTitleChange"
           placeholder="Untitled Note"
-          class="w-full text-5xl font-black text-transparent bg-gradient-to-r from-white via-white to-white/70 bg-clip-text placeholder-white/20 border-none outline-none bg-transparent mb-6 tracking-tight drop-shadow-sm"
+          class="w-full text-5xl font-black text-transparent bg-gradient-to-r from-white via-white to-white/70 bg-clip-text caret-white placeholder-white/20 border-none outline-none bg-transparent mb-6 tracking-tight drop-shadow-sm"
         />
         
         <div class="flex items-center gap-4 mb-10 text-sm">

@@ -1,16 +1,6 @@
 const db = require('../db');
 const userCollection = db.collection('users');
 
-const getAll = async () => {
-    const usersSnapshot = await userCollection.get();
-
-    if (usersSnapshot.empty) {
-        return null;
-    }
-
-    return usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-}
-
 const findById = async (id) => {
     const userDoc = await userCollection.doc(id).get();
 
@@ -56,7 +46,6 @@ const update = async (userId, updateData) => {
 }
 
 module.exports = {
-    getAll,
     findById,
     findByEmail,
     create,

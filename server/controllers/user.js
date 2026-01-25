@@ -1,7 +1,14 @@
-const { getAll, findByEmail, findById, create, update } = require('../models/user');
+const { findByEmail, findById, create, update } = require('../models/user');
 const { comparePassword, generateToken, hashPassword } = require("../utils/auth")
 
+const { validationResult } = require('express-validator');
+
 const updateUserData = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
         const { userId, folders } = req.body;
 
@@ -29,20 +36,6 @@ const updateUserData = async (req, res) => {
     } catch (error) {
         console.error("Update user data error", error.message);
         return res.status(500).json("Internal server error");
-    }
-}
-const getUsers = async (req, res) => {
-    try {
-        const users = await getAll();
-
-        if (!users) {
-            return res.status(404).json("No users found");
-        }
-
-        res.status(200).json(users);
-    } catch (error) {
-        console.error('Error fetching users:', error.message);
-        res.status(500).json('Internal Server Error');
     }
 }
 
@@ -80,6 +73,11 @@ const getById = async (req, res) => {
 }
 
 const login = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
         const { email, password } = req.body;
 
@@ -112,6 +110,11 @@ const login = async (req, res) => {
 }
 
 const register = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
         const { email, password, displayName } = req.body;
 
@@ -134,6 +137,7 @@ const register = async (req, res) => {
             folders: [
                 {
                     name: "All notes",
+                    id: "all notes",
                     createdAt: new Date(),
                     notes: []
                 }
@@ -155,7 +159,6 @@ const register = async (req, res) => {
 }
 
 module.exports = {
-    getUsers,
     getByEmail,
     login,
     register,

@@ -131,7 +131,10 @@ export const useUserStore = defineStore('user', () => {
             try {
                 const response = await fetch('http://localhost:8080/users/updateData', {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({
                         userId: userRef.value.id,
                         folders: folderStructure
@@ -163,7 +166,8 @@ export const useUserStore = defineStore('user', () => {
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data || 'Login failed')
+                const errorMessage = data.errors ? data.errors.map(err => err.msg).join(', ') : (data || 'Login failed')
+                throw new Error(errorMessage)
             }
 
             const { token, user } = data
@@ -188,7 +192,9 @@ export const useUserStore = defineStore('user', () => {
         try {
             const response = await fetch('http://localhost:8080/users/register', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 credentials: 'include',
                 body: JSON.stringify({ email, password, displayName })
             })
@@ -196,7 +202,8 @@ export const useUserStore = defineStore('user', () => {
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data || 'Registration failed')
+                const errorMessage = data.errors ? data.errors.map(err => err.msg).join(', ') : (data || 'Registration failed')
+                throw new Error(errorMessage)
             }
 
             const { token, user } = data
@@ -236,13 +243,11 @@ export const useUserStore = defineStore('user', () => {
 
         let targetFolderId = selectedFolderId.value;
 
-        if (!targetFolderId || targetFolderId === 'favourites' || !allPhysicalFolders.value.find(f => f.id === targetFolderId)) {
-            targetFolderId = allPhysicalFolders.value[0]?.id || null;
-        }
-
+        // Check if the current selection is a valid physical folder
         const folder = folders.value.find(f => f.id === targetFolderId)
-        if (!folder) {
-            console.warn('Cannot create note: no folders available');
+
+        if (!folder || targetFolderId === 'favourites') {
+            alert('Please select a specific folder to create a note in.');
             return;
         }
 
