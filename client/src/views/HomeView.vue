@@ -1,6 +1,5 @@
 <template>
   <div class="h-screen flex overflow-hidden font-sans text-white selection:bg-pink-500/30">
-    <!-- Sidebar -->
     <aside 
       :class="[
         'w-full md:w-72 bg-white/5 backdrop-blur-2xl border-r border-white/10 flex-col transition-all duration-300 shadow-2xl z-10 relative',
@@ -15,7 +14,6 @@
       </div>
       
       <nav class="flex-1 overflow-y-auto p-4 space-y-6">
-        <!-- Folders -->
         <div class="space-y-1">
           <div class="flex items-center justify-between px-2 mb-3">
              <span class="text-xs font-bold uppercase tracking-widest text-white/40">Folders</span>

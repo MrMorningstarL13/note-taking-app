@@ -209,7 +209,6 @@ export const useUserStore = defineStore('user', () => {
             const { token, user } = data
             Cookies.set('token', token, { expires: 7 })
 
-            // const decoded = jwtDecode(token)
             userRef.value = user
             isAuthenticated.value = true
 
@@ -243,7 +242,6 @@ export const useUserStore = defineStore('user', () => {
 
         let targetFolderId = selectedFolderId.value;
 
-        // Check if the current selection is a valid physical folder
         const folder = folders.value.find(f => f.id === targetFolderId)
 
         if (!folder || targetFolderId === 'favourites') {
@@ -407,10 +405,9 @@ export const useUserStore = defineStore('user', () => {
     }
 
     return {
-        // Auth State
         userRef,
         isAuthenticated,
-        // Notes State
+
         notes,
         folders,
         allFolders,
@@ -422,15 +419,12 @@ export const useUserStore = defineStore('user', () => {
         selectedNote,
         searchQuery,
 
-        // Auth Actions
         login,
         register,
         logout,
 
-        // Notes Getters/Helpers
         getNotesCountForFolder,
 
-        // Notes Actions
         createNote,
         updateNote,
         deleteNote,

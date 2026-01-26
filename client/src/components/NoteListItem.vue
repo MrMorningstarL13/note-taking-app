@@ -8,7 +8,7 @@
         : 'border-transparent bg-white/5 hover:bg-white/10 hover:border-white/10 hover:scale-[1.02]'
     ]"
   >
-    <!-- Selection Glow -->
+
     <div v-if="isSelected" class="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-transparent opacity-50"></div>
 
     <div class="flex items-start gap-3 relative z-10 w-full">

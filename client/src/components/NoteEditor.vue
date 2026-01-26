@@ -1,6 +1,6 @@
 <template>
   <div class="flex-1 flex flex-col relative z-0 min-w-0">
-    <!-- Empty State -->
+
     <div v-if="!store.selectedNote" class="flex-1 flex flex-col items-center justify-center text-white/30">
       <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6 ring-1 ring-white/10 animate-pulse">
         <FileText class="w-10 h-10 opacity-50" />
@@ -111,7 +111,7 @@
       class="fixed inset-0 z-20"
     />
 
-    <!-- AI Prompt Overlay -->
+
     <Transition name="fade">
       <div 
         v-if="showAIPrompt" 

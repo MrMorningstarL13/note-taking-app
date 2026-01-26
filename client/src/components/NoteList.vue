@@ -1,9 +1,9 @@
 <template>
   <div class="w-full md:w-80 border-r border-white/10 bg-white/5 backdrop-blur-3xl flex flex-col transition-all duration-300 shadow-2xl z-0">
-    <!-- Header -->
+
     <div class="p-6 border-b border-white/5 bg-white/5 backdrop-blur-md">
       <div class="flex items-center gap-3 mb-4">
-        <!-- Mobile Menu Button -->
+        
         <button 
           @click="$emit('open-menu')"
           class="md:hidden p-2 -ml-2 text-white/60 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
@@ -17,7 +17,7 @@
         </span>
       </div>
       
-      <!-- Search -->
+      
       <div class="relative group">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-pink-400 transition-colors" />
         <input
@@ -29,7 +29,7 @@
       </div>
     </div>
 
-    <!-- Notes List -->
+
     <div class="flex-1 overflow-y-auto custom-scrollbar">
       <div v-if="store.filteredNotes.length === 0" class="flex flex-col items-center justify-center p-8 h-full text-center">
         <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4 ring-1 ring-white/10">
@@ -49,7 +49,7 @@
       </div>
     </div>
 
-    <!-- New Note Button -->
+
     <div class="p-4 border-t border-white/10 bg-gradient-to-t from-black/20 to-transparent backdrop-blur-sm">
       <button
         @click="store.createNote"

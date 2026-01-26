@@ -1,6 +1,6 @@
 <template>
   <div class="group relative flex items-center overflow-hidden">
-    <!-- Rename Input -->
+
     <div v-if="isEditing" class="w-full px-4 py-2">
       <input
         v-model="editName"
@@ -21,7 +21,7 @@
           : 'text-white/60 hover:bg-white/5 hover:text-white hover:pl-5'
       ]"
     >
-      <!-- Active Indicator glow -->
+
       <div v-if="isSelected" class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.5)]"></div>
 
       <component 
@@ -34,7 +34,7 @@
       
       <span class="flex-1 font-medium tracking-wide truncate">{{ folder.name }}</span>
       
-      <!-- Actions (Always present on mobile, animated on desktop) -->
+
       <div 
         v-if="folder.id !== 'favourites' && (allowDelete && !isEditing)" 
         class="flex items-center gap-1.5 flex-shrink-0 z-20 transition-all duration-300

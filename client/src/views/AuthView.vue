@@ -1,9 +1,7 @@
 <template>
   <div class="flex items-center justify-center w-full h-full min-h-screen p-4">
-    <!-- Card Container -->
     <div class="w-full max-w-md relative z-10 transition-all duration-500">
       
-      <!-- Top Banner for Backend Errors -->
       <Transition name="fade">
         <div 
           v-if="error" 
@@ -15,10 +13,8 @@
       </Transition>
 
       <div class="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] p-10 border border-white/10 shadow-2xl relative overflow-hidden group">
-        <!-- Top Decor -->
         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 opacity-60"></div>
 
-        <!-- Logo / Header -->
         <div class="text-center mb-10">
           <h1 class="text-4xl font-black bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-sm mb-2">
             Notes
@@ -28,10 +24,8 @@
           </p>
         </div>
 
-        <!-- Form -->
         <form @submit.prevent="handleSubmit" class="space-y-6">
           
-          <!-- Email Input -->
           <div>
             <label class="text-xs font-bold uppercase tracking-widest text-white/50 ml-1">Email</label>
             <input 
@@ -44,7 +38,6 @@
             <p v-if="email && !isEmailValid" class="text-[10px] text-red-400/80 ml-1 font-medium">Please enter a valid email address</p>
           </div>
 
-          <!-- Password Input -->
           <div class="space-y-2">
             <label class="text-xs font-bold uppercase tracking-widest text-white/50 ml-1">Password</label>
             <input 
@@ -57,7 +50,6 @@
             <p v-if="!isLogin && password && password.length < 6" class="text-[10px] text-red-400/80 ml-1 font-medium italic">Min. 6 characters required</p>
           </div>
 
-          <!-- Confirm Password (Signup only) -->
           <div v-if="!isLogin" class="space-y-2 duration-300">
             <label class="text-xs font-bold uppercase tracking-widest text-white/50 ml-1">Confirm Password</label>
             <input 
@@ -82,7 +74,6 @@
             <p v-if="displayName && displayName.length > 30" class="text-[10px] text-red-400 ml-1">Name must be under 30 characters</p>
           </div>
 
-          <!-- Submit Button -->
           <button 
             type="submit"
             :disabled="!isFormValid || isLoading"
@@ -97,7 +88,6 @@
           </button>
         </form>
 
-        <!-- Toggle Mode -->
         <div class="mt-8 text-center">
           <p class="text-sm text-white/60">
             {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
